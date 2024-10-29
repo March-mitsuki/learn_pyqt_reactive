@@ -1,0 +1,1 @@
+.\auto-gui-studio\Scripts\Activate.ps1

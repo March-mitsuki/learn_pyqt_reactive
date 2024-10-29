@@ -1,0 +1,13 @@
+# venv
+auto-gui-studio/
+
+# 可行性测试文件
+
+__pycache__/
+
+# 本地文件
+logs/
+db.sqlite3
+.vscode/
+match_images/
+db.json
