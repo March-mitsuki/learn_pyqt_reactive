@@ -55,6 +55,10 @@ class ChiyoUI(QMainWindow):
         set_timeout(lambda: reactive_bg.set("background-color: blue;"), 3)
         set_timeout(lambda: reactive_bg.set("background-color: green;"), 6)
 
+        todos = []
+        for i in range(10):
+            todos.append(use_signal(f"Todo {i}"))
+
         self.main = HBox(
             VBox(
                 "Welcome to ChiyoUI",

@@ -42,12 +42,16 @@ def apply_style_kwargs(widget: QWidget, layout: QLayout, **kwargs):
             handle_signal(value, lambda v: widget.setFixedSize(*v))
 
 
-def add_widget_to_layout(layout: QLayout, widget: QWidget):
-    if isinstance(widget, str):
-        layout.addWidget(QLabel(widget))
+def add_widget_to_layout(layout: QLayout, widget: QWidget | str | int):
+    layout.addWidget(create_widget(widget))
+
+
+def create_widget(widget: QWidget | str | int):
+    if isinstance(widget, QWidget):
+        return widget
+    elif isinstance(widget, str):
+        return QLabel(widget)
     elif isinstance(widget, (int, float)):
-        layout.addWidget(QLabel(str(widget)))
-    elif isinstance(widget, QWidget):
-        layout.addWidget(widget)
+        return QLabel(str(widget))
     else:
         raise TypeError(f"Invalid widget: {widget}")

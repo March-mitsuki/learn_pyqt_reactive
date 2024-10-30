@@ -30,7 +30,7 @@ if __name__ == "__main__":
     # if not windll.shell32.IsUserAnAdmin():
     #     logger.error("Please run this program as administrator")
     #     sys.exit(1)
-    sys.excepthook = handle_exception
+    # sys.excepthook = handle_exception
 
     app = QApplication(sys.argv)
     app.aboutToQuit.connect(handle_quit)

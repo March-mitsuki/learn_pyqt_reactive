@@ -53,7 +53,11 @@ class Button(ChiyoUiWidget):
         super().__init__(*args, **kwargs)
         self.type = type
 
-        self.button = QPushButton(text)
+        if isinstance(text, Signal):
+            self.button = QPushButton(text.current())
+            text.on_change.connect(self.button.setText)
+        else:
+            self.button = QPushButton(text)
         self.button.clicked.connect(on_click or self._on_click.emit)
         self.layout().addWidget(self.button)
 

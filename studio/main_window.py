@@ -1,18 +1,12 @@
-from PyQt6.QtWidgets import (
-    QApplication,
-    QWidget,
-    QMainWindow,
-    QPushButton,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QScrollArea,
-)
+from PyQt6.QtWidgets import QApplication, QMainWindow
 
+from chiyoui.layout import VBox, HBox, ScrollArea
+from chiyoui.widget import Button, Label
+from chiyoui.reactive import use_signal
 
 from db.models import Job
 from .job_card import JobCard
-from .utils import zoom_rect, clear_layout
+from .utils import zoom_rect
 from .multi_input_dialog import MultiInputDialog
 
 
@@ -24,39 +18,26 @@ class MainWindow(QMainWindow):
         scrreen_geom = QApplication.primaryScreen().geometry()
         self.setGeometry(zoom_rect(scrreen_geom, 0.5))
 
-        self.create_task_btn = QPushButton("Create Job", self)
-        self.create_task_btn.clicked.connect(self.create_job)
+        self.job_widgets = use_signal([])
 
-        self.exit_button = QPushButton("退出", self)
-        self.exit_button.clicked.connect(QApplication.quit)
-
-        # 左侧内容
-        self.left_content = QVBoxLayout()
-        self.left_content.addWidget(self.create_task_btn)
-        self.left_content.addWidget(self.exit_button)
-
-        # 右侧内容
-        self.right_content = QVBoxLayout()
         all_jobs = Job.select()
         if len(all_jobs) <= 0:
-            self.right_content.addWidget(QLabel("No Jobs"))
+            self.job_widgets.set([Label("No Jobs")])
         for job in all_jobs:
-            self.right_content.addWidget(JobCard(job))
+            self.job_widgets.set(lambda prev: prev.append(JobCard(job)))
 
-        right_container = QWidget()
-        right_container.setLayout(self.right_content)
+        self.main = HBox(
+            VBox(
+                "Welcome to Auto GUI Studio",
+                Button(text="Create Job", on_click=self.create_job),
+                Button(text="退出", on_click=QApplication.quit),
+            ),
+            ScrollArea(
+                self.job_widgets,
+            ),
+        )
 
-        right_scroll_area = QScrollArea()
-        right_scroll_area.setWidgetResizable(True)
-        right_scroll_area.setWidget(right_container)
-
-        hbox = QHBoxLayout()
-        hbox.addLayout(self.left_content)
-        hbox.addWidget(right_scroll_area)
-
-        container = QWidget()
-        container.setLayout(hbox)
-        self.setCentralWidget(container)
+        self.setCentralWidget(self.main)
 
     def create_job(self):
         input_dialog = MultiInputDialog("Create Job", ["Name:", "Window Name:"])
@@ -69,8 +50,8 @@ class MainWindow(QMainWindow):
 
     def rerender_jobs(self):
         all_jobs = Job.select()
-        clear_layout(self.right_content)
+        self.job_widgets.set([])
         if len(all_jobs) <= 0:
-            self.right_content.addWidget(QLabel("No Jobs"))
+            self.job_widgets.set([Label("No Jobs")])
         for job in all_jobs:
-            self.right_content.addWidget(JobCard(job))
+            self.job_widgets.set(lambda prev: prev.append(JobCard(job)))

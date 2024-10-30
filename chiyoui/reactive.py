@@ -9,6 +9,10 @@ class Signal(QObject):
         self._signal = initial_signal
 
     def set(self, new_signal):
+        """
+        Parameters:
+            new_signal: Union[object, Callable[[object], object]]
+        """
         if callable(new_signal):
             self._signal = new_signal(self._signal)
         else:
