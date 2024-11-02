@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from PyQt6.QtWidgets import QWidget
 from uuid import uuid4
@@ -99,6 +100,21 @@ def reconcile_children(v_wgt):
             stack.append((child_reactive, child.children))
 
     return root
+
+
+def perform_unit_work(node):
+    """
+    Parameters:
+    - node: ReactiveNode
+    """
+    global wip_node
+    wip_node = node
+    if not node.parent:
+        return
+
+    if node.effect_tag & Operation.UPDATE:
+        node.widget = create_qt_widget(node.tag, **node.props)
+        node.effect_tag = None
 
 
 class VirtualWidget:
@@ -212,7 +228,7 @@ class ReactiveNode:
 
 class Component(ABC):
     @abstractmethod
-    def render(self, *args, **kwargs) -> VirtualWidget:
+    def render(self, *args, **kwargs) -> VirtualWidget | Component:
         raise NotImplementedError()
 
 
@@ -222,13 +238,31 @@ class Reactive:
         self.root = node
 
     def render(self):
-        self.container.layout().addWidget(self.root.widget)
-        self.start_work()
+        self.container.layout().addWidget(self.root.render().to_reactive().widget)
+        self.start_work(self.root)
 
-    def start_work(self):
-        self.root.for_each(
-            on_enter=self.commit_node,
-        )
+    def start_work(self, node: Component):
+        rendered = node.render()
+        # stack = [rendered]
+        # while len(stack) > 0:
+        #     current = stack.pop()
+        #     if isinstance(current, Component):
+        #         self.commit_component(current)
+        #     elif isinstance(current, VirtualWidget):
+        #         current.to_reactive_tree().for_each(
+        #             on_enter=self.commit_node,
+        #         )
+        #     else:
+        #         raise ValueError("Invalid return type")
+
+        if isinstance(rendered, Component):
+            self.start_work(rendered)
+        elif isinstance(rendered, VirtualWidget):
+            rendered.to_reactive_tree().for_each(
+                on_enter=self.commit_node,
+            )
+        else:
+            raise ValueError("Invalid return type")
 
     def process_node(self, node: ReactiveNode, depth: int):
         global wip_node

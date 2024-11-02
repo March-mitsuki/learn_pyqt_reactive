@@ -11,3 +11,6 @@ db.sqlite3
 .vscode/
 match_images/
 db.json
+
+# pyenv
+.python-version
